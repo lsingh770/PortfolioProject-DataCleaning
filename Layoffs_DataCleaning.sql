@@ -1,10 +1,10 @@
 -- SQL Project - Data Cleaning
 -- https://github.com/AlexTheAnalyst/MySQL-YouTube-Series/blob/main/layoffs.csv
 
-
+-- Created schema with name 'world_layoffs' and then used it
 USE world_layoffs;
 
-## Creating staging area for existing layoffs table
+-- Creating staging area for existing layoffs table
 CREATE TABLE layoffs_staging
 Like layoffs;
 
@@ -13,7 +13,7 @@ SELECT * FROM layoffs;
 
 SELECT COUNT(*) FROM layoffs_staging;
 
-## Removing duplicate rows
+-- Removing duplicate rows
 
 with duplicate_cte as (
 Select *, ROW_NUMBER() OVER(PARTITION BY company,location, industry, total_laid_off, percentage_laid_off,`date`, stage, country, funds_raised_millions) as row_num
@@ -22,7 +22,7 @@ SELECT * FROM duplicate_cte
 WHERE row_num >1;
 
 
--- Creating another table with additional column row_num, so that it would be easy to remove duplicates 
+/* Creating another table with additional column row_num, so that it would be easy to remove duplicates */
 CREATE TABLE `layoffs_staging2` (
   `company` text,
   `location` text,
@@ -44,12 +44,12 @@ from layoffs_staging;
 DELETE FROM layoffs_staging2
 WHERE row_num >1;
 
--- checking each individual column if there is any ambiguity in data
+/* checking each individual column if there is any ambiguity in data */
 SELECT DISTINCT(company) FROM layoffs_staging2;
 SELECT DISTINCT(location) FROM layoffs_staging2;
 SELECT DISTINCT(industry) FROM layoffs_staging2; /* Here we can see we have 'Crypto', 'CryptoCurrency' and 'Crypto Currency' as values in industry column*/
 
-/*Lets check if all have same meaning or belongs to same industry*/
+/* Lets check if all have same meaning or belongs to same industry */
 SELECT * FROM layoffs_staging2 WHERE industry LIKE 'Crypto%'; 
 
 /* So as per the data we can find that all are same and related rows can be updated with single value in industry column */
@@ -71,7 +71,7 @@ SET `date` = STR_TO_DATE(`date`, '%m/%d/%Y'); /* As we have given dates in '%m/%
 ALTER TABLE layoffs_staging2
 MODIFY COLUMN `date` DATE;
 
-## Check for null values
+-- Check for null values
 SELECT * FROM layoffs_staging2 
 WHERE company IS NULL OR company = '' OR
 location IS NULL OR location = '' OR 
@@ -97,7 +97,7 @@ SELECT * FROM layoffs_staging2 WHERE industry IN (NULL,''); /* 1 more industry v
 
 SELECT * FROM layoffs_staging2 WHERE company LIKE 'Bally%'; /* searched for similar records but found none , we can leave this as it is */
 
-## Remove any rows or column if required
+-- Remove any rows or column if required
 SELECT * FROM layoffs_staging2 
 WHERE total_laid_off IS NULL
 AND percentage_laid_off IS NULL;
